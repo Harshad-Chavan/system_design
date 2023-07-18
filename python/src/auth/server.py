@@ -14,7 +14,7 @@ server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
 server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
 server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
 server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
-server.config["MYSQL_PORT"] = os.environ.get("MYSQL_PORT")
+server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT"))
 
 
 # Create a basic login route
@@ -24,8 +24,11 @@ def login():
     if not auth:
         return "Missing credentials", 401
     else:
+        # create a cursor to execute queries
         cur = mysql.connection.cursor()
-        res = cur.execute("SELECT email FROM user WHERE email=%s", (auth.username,))
+
+        # raw queries
+        res = cur.execute("SELECT email,password FROM user WHERE email=%s", (auth.username,))
 
         if res > 0:
             # user exists
@@ -33,6 +36,7 @@ def login():
             email = user_row[0]
             password = user_row[1]
 
+            # check for credentials if valid then create a JWT token and send
             if auth.username != email or auth.password != password:
                 return "invalid credentials", 401
             else:
@@ -53,14 +57,16 @@ def createJWT(username, secret, authz):
     :return:
     """
     jwt.encode(
+        # Payload
         {
             "username": username,
             "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=1),
             "iat": datetime.datetime.utcnow(),
-            "admin": authz
+            "admin": authz,
         },
+        # JWT secret Key
         secret,
-        algorithm="HS256"
+        algorithm="HS256",
     )
 
 
@@ -87,4 +93,4 @@ def test():
 
 
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port="5000")
+    server.run(host="0.0.0.0", port="8000")

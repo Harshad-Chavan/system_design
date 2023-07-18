@@ -1,6 +1,6 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
+apiVersion: apps/v1 #the kubernetes api version that will be used
+kind: Deployment # kind of object to create
+metadata: # this uniquely identifies the object
   name: auth
   labels:
     app: auth
@@ -22,7 +22,7 @@ spec:
         - name: auth
           image: harshadchavan141/auth
           ports:
-            - containerPort: 5000
+            - containerPort: 8000
           envFrom:
             - configMapRef:
                 name: auth-configmap
